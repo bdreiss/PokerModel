@@ -1,0 +1,3 @@
+JMH S 19 net.berndreiss.Main S 55 net.berndreiss.jmh_generated.Main_parallelEight_jmhTest S 13 parallelEight S 10 Throughput E A 1 1 1 E E E E E E E I 1 1 I 1 2 E E E E E E E E 
+JMH S 19 net.berndreiss.Main S 57 net.berndreiss.jmh_generated.Main_parallelSixteen_jmhTest S 15 parallelSixteen S 10 Throughput E A 1 1 1 E E E E E E E I 1 1 I 1 2 E E E E E E E E 
+JMH S 19 net.berndreiss.Main S 52 net.berndreiss.jmh_generated.Main_sequential_jmhTest S 10 sequential S 10 Throughput E A 1 1 1 E E E E E E E I 1 1 I 1 2 E E E E E E E E 
