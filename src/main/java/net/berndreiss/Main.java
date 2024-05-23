@@ -34,18 +34,12 @@ public class Main {
             assert sh2 != null;
 
             if (preflopEquities.containsKey(sh1.getShortHand()+sh2.getShortHand())) {
-                System.out.println(sh1);
-                System.out.println(sh2);
 
                 double[] result = preflopEquities.get(sh1.getShortHand() + sh2.getShortHand());
-                System.out.println(result[1] - result[0]);
                 return result[0] - result[1];
             }
-            System.out.println(sh2);
-            System.out.println(sh1);
 
             double[] result = preflopEquities.get(sh2.getShortHand() + sh1.getShortHand());
-            System.out.println(result[0] - result[1]);
             return result[1] - result[0];
         }
         );
@@ -66,8 +60,11 @@ public class Main {
         queens.add(new Card(CardSuite.SPADES, CardValue.QUEEN));
         queens.add(new Card(CardSuite.HEARTS, CardValue.QUEEN));
 
-
-        range.handAgainstRange(queens);
+        for (int i= 0; i <1000000; i++) {
+            if (i%100000==0)
+                System.out.println(i);
+            range.handAgainstRange(queens);
+        }
     }
 
     private static List<Double> getStackSizes(){

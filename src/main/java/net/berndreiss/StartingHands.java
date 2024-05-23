@@ -177,6 +177,38 @@ public enum StartingHands {
     FOUR_TWO (CardValue.FOUR, CardValue.TWO, StartingHandsType.UNSUITED),
     THREE_TWO (CardValue.THREE, CardValue.TWO, StartingHandsType.UNSUITED),
     ;
+
+    public static Card[][][] startingHands = new Card[169][][];
+
+    static{
+        for (int i=0; i < 13; i++){
+            startingHands[i] = new Card[6][2];
+        }
+        for (int i=13; i < 91; i++){
+            startingHands[i] = new Card[4][2];
+        }
+        for (int i=91; i < 169; i++){
+            startingHands[i] = new Card[12][2];
+        }
+        for (int i=0; i<169;i++){
+            List<CardValue> values = StartingHands.values()[i].getCardValues();
+            StartingHandsType type = StartingHands.values()[i].getStartingHandsType();
+            List<Card> cardsRange = HandEvaluation.getCards(values, type);
+            List<List<Card>> combos = HandEvaluation.getCombinations(cardsRange, 2);
+
+            if (type == StartingHandsType.SUITED)
+                combos = combos.stream().filter(l -> l.get(0).suite()==l.get(1).suite()).toList();
+
+            if (type == StartingHandsType.UNSUITED)
+                combos = combos.stream().filter(l->l.get(0).suite()!=l.get(1).suite()).filter(l -> l.get(0).value() != l.get(1).value()).toList();
+
+            for (int j=0; j< combos.size();j++) {
+                startingHands[i][j][0] = combos.get(j).get(0);
+                startingHands[i][j][1] = combos.get(j).get(1);
+            }
+        }
+    }
+
     private final List<CardValue> cardValues = new ArrayList<>();
     private final StartingHandsType startingHandsType;
 
@@ -207,16 +239,31 @@ public enum StartingHands {
 
         List<CardValue> sortedCards = cards.stream().map(Card::value).sorted(Comparator.reverseOrder()).toList();
 
-        if (cards.get(0).suite() == cards.get(1).suite())
-            return Arrays.stream(StartingHands.values()).filter(sh -> sh.getCardValues().equals(sortedCards)).findAny().get();
+        int offset = 13;
+        if (cards.get(0).suite() != cards.get(1).suite())
+            offset = 91;
 
-        return Arrays.stream(StartingHands.values()).skip(91).filter(sh -> sh.getCardValues().equals(sortedCards)).findAny().get();
+        offset += 12-sortedCards.get(0).ordinal();
+
+
+        return Arrays.stream(StartingHands.values()).skip(offset).filter(sh -> sh.getCardValues().equals(sortedCards)).findAny().get();
 
     }
 
     static StartingHands determineStartingHand(List<CardValue> values, StartingHandsType type){
+        if (values.size() > 2)
+            return null;
+
+        if (type == StartingHandsType.PAIRED)
+            return StartingHands.values()[values.get(0).ordinal()];
+
+        int offset = 13;
+        if (type ==StartingHandsType.UNSUITED)
+            offset = 91;
         List<CardValue> valuesSorted = values.stream().sorted(Comparator.reverseOrder()).toList();
-        return Arrays.stream(StartingHands.values()).filter(sh -> sh.getCardValues().equals(valuesSorted) && sh.getStartingHandsType() == type).findAny().get();
+        offset += 12-valuesSorted.get(0).ordinal();
+
+        return Arrays.stream(StartingHands.values()).skip(offset).filter(sh -> sh.getCardValues().equals(valuesSorted) && sh.getStartingHandsType() == type).findAny().get();
     }
 
     public String getShortHand(){

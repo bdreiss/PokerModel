@@ -1,5 +1,6 @@
 package net.berndreiss;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.ToDoubleBiFunction;
 
@@ -26,32 +27,16 @@ public class Range {
         double result = 0;
         int hands = 0;
         for (int i = 0; i < 169; i++){
-            List<CardValue> values = StartingHands.values()[i].getCardValues();
-            StartingHandsType type = StartingHands.values()[i].getStartingHandsType();
-            List<Card> cardsRange = HandEvaluation.getCards(values, type);
-            List<List<Card>> combos = HandEvaluation.getCombinations(cardsRange, 2);
 
-            if (type == StartingHandsType.SUITED)
-                combos = combos.stream().filter(l -> l.get(0).suite()==l.get(1).suite()).toList();
-
-            if (type == StartingHandsType.UNSUITED)
-                combos = combos.stream().filter(l->l.get(0).suite()!=l.get(1).suite()).filter(l -> l.get(0).value() != l.get(1).value()).toList();
-
-
-            for (int j=0; j<combos.size(); j++){
+            for (int j=0; j<range[i].length; j++){
                 if (range[i][j] == 0)
                     continue;
-
-                List<Card> cards1 = combos.get(j);
+                List<Card> cards1 = Arrays.stream(StartingHands.startingHands[i][j]).toList();
                 result += winningFunction.applyAsDouble(cards, cards1)*range[i][j];
-                System.out.println(range[i][j]);
-                System.out.println(result);
                 hands++;
             }
 
         }
-        System.out.println(hands);
-        System.out.println(result/hands);
     }
 
 
