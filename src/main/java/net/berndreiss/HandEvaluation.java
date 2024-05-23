@@ -1,5 +1,7 @@
 package net.berndreiss;
 
+import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
@@ -12,6 +14,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class HandEvaluation {
+
+    public static final String PREFLOP_EQUITY_MAP_PATH = "PreflopEquity";
 
     public static List<Player> getWinner(List<Player> playerList) {
         List<Player> winners = new ArrayList<>();
@@ -178,6 +182,38 @@ public class HandEvaluation {
     }
 
 
+    public static Map<String, double[]> getPreflopEquities() throws IOException {
+        File preflopEquityMapFile = new File(PREFLOP_EQUITY_MAP_PATH);
+        Map<String, double[]> preflopEquities = new HashMap<>();
+        if (preflopEquityMapFile.exists()){
+            try(FileInputStream fis = new FileInputStream(preflopEquityMapFile)){
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                preflopEquities = (Map<String, double[]>) ois.readObject();
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+        List<List<StartingHands>> startingHandsCombinations = getCombinations(Arrays.stream(StartingHands.values()).toList(), 2);
+
+        Map<String, double[]> finalPreflopEquities = preflopEquities;
+        startingHandsCombinations.removeIf(combination -> finalPreflopEquities.containsKey(combination.get(0).getShortHand() + combination.get(1).getShortHand()));
+
+        ForkJoinTask<Map<String, double[]>> task = new ParallelPokerEquityCalculator(startingHandsCombinations,1);
+        preflopEquities = new ForkJoinPool().invoke(task);
+        finalPreflopEquities.putAll(preflopEquities);
+
+        try (FileOutputStream fos = new FileOutputStream(preflopEquityMapFile)) {
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(finalPreflopEquities);
+            oos.flush();
+        }
+
+        return  finalPreflopEquities;
+
+
+    }
+
     public static double getPreflopEquity(List<CardValue> values1, StartingHandsType type1, List<CardValue> values2, StartingHandsType type2, boolean print) {
 
         if (print) System.out.println("CHECKING: " +
@@ -304,14 +340,14 @@ public class HandEvaluation {
         return 0;
     }
 
-    private static List<Card> getCards(List<CardValue> values, StartingHandsType type) {
+    public static List<Card> getCards(List<CardValue> values, StartingHandsType type) {
         if (type == StartingHandsType.PAIRED)
             return Arrays.stream(CardSuite.values()).map(s -> new Card(s, values.get(0))).toList();
         return values.stream().flatMap(v -> Arrays.stream(CardSuite.values()).map(s -> new Card(s, v))).toList();
     }
 
-    public static List<List<Card>> getCombinations(List<Card> universe, int k) {
-        List<List<Card>> combinations = new ArrayList<>();
+    public static <T> List<List<T>> getCombinations(List<T> universe, int k) {
+        List<List<T>> combinations = new ArrayList<>();
         if (k == 0) {
             combinations.add(new ArrayList<>());
             return combinations;
@@ -323,7 +359,7 @@ public class HandEvaluation {
         return combinations;
     }
 
-    private static void generateCombinations(List<Card> universe, int k, int start, List<Card> current, List<List<Card>> combinations) {
+    private static <T> void generateCombinations(List<T> universe, int k, int start, List<T> current, List<List<T>> combinations) {
         if (current.size() == k) {
             combinations.add(new ArrayList<>(current));
             return;

@@ -219,4 +219,18 @@ public enum StartingHands {
         return Arrays.stream(StartingHands.values()).filter(sh -> sh.getCardValues().equals(valuesSorted) && sh.getStartingHandsType() == type).findAny().get();
     }
 
+    public String getShortHand(){
+        if (startingHandsType == StartingHandsType.PAIRED)
+            return cardValues.get(0).getShorthand() + cardValues.get(0).getShorthand();
+
+        String addendum = "";
+        if (startingHandsType == StartingHandsType.SUITED)
+            addendum = "s";
+        else
+            addendum = "o";
+
+        return cardValues.get(0).getShorthand() + cardValues.get(1).getShorthand() + addendum;
+
+    }
+
 }

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -20,20 +21,53 @@ public class Main {
         System.out.println(HandEvaluation.getCombinations(Card.getDeck(), 4).size());
 
 //        HandEvaluation.getPreflopEquity(l1, StartingHandsType.PAIRED, l2, StartingHandsType.PAIRED);
-        HandEvaluation.getPreflopEquityParallel(l1, StartingHandsType.PAIRED, l2, StartingHandsType.PAIRED,1, true);
+        //HandEvaluation.getPreflopEquityParallel(l1, StartingHandsType.PAIRED, l2, StartingHandsType.PAIRED,1, true);
 
-        Runtime.getRuntime().availableProcessors();
-        List<Card> cardList = new ArrayList<>(Arrays.asList(
-                new Card(CardSuite.HEARTS, CardValue.ACE),
-                new Card(CardSuite.SPADES, CardValue.KING)
-        ));
 
-        System.out.println(StartingHands.determineStartingHand(cardList));
+       Map<String, double[]> preflopEquities = HandEvaluation.getPreflopEquities();
 
-        List<Card> cardy = new ArrayList<>(Arrays.asList(new Card(CardSuite.DIAMONDS, CardValue.ACE)));
-        Card card = new Card(CardSuite.HEARTS, CardValue.ACE);
-        System.out.println(cardy.contains(card));
 
+        Range range = new Range((h1, h2) -> {
+            StartingHands sh1 = StartingHands.determineStartingHand(h1);
+            StartingHands sh2 = StartingHands.determineStartingHand(h2);
+            assert sh1 != null;
+            assert sh2 != null;
+
+            if (preflopEquities.containsKey(sh1.getShortHand()+sh2.getShortHand())) {
+                System.out.println(sh1);
+                System.out.println(sh2);
+
+                double[] result = preflopEquities.get(sh1.getShortHand() + sh2.getShortHand());
+                System.out.println(result[1] - result[0]);
+                return result[0] - result[1];
+            }
+            System.out.println(sh2);
+            System.out.println(sh1);
+
+            double[] result = preflopEquities.get(sh2.getShortHand() + sh1.getShortHand());
+            System.out.println(result[0] - result[1]);
+            return result[1] - result[0];
+        }
+        );
+
+        for (int i=0; i < 6; i++){
+            range.range[9][i] = 1;
+        }
+
+        for (int i=0; i < 4; i++){
+            range.range[13][i] = 1;
+        }
+
+        for (int i=0; i < 12; i++){
+            range.range[91][i] = 1;
+        }
+
+        List<Card> queens = new ArrayList<>();
+        queens.add(new Card(CardSuite.SPADES, CardValue.QUEEN));
+        queens.add(new Card(CardSuite.HEARTS, CardValue.QUEEN));
+
+
+        range.handAgainstRange(queens);
     }
 
     private static List<Double> getStackSizes(){
